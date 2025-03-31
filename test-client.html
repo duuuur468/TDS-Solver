@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Helper API Tester</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .file-input {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #eef6fc;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+        .error {
+            background-color: #fdeded;
+            border-left: 4px solid #e74c3c;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Assignment Helper API Tester</h1>
+        
+        <form id="questionForm">
+            <div>
+                <label for="question">Enter your assignment question:</label>
+                <textarea id="question" required placeholder="E.g. Download and unzip file abcd.zip which has a single extract.csv file inside. What is the value in the 'answer' column of the CSV file?"></textarea>
+            </div>
+            
+            <div class="file-input">
+                <label for="file">Upload a file (optional):</label>
+                <input type="file" id="file" name="file">
+            </div>
+            
+            <div>
+                <label for="apiEndpoint">API Endpoint:</label>
+                <input type="text" id="apiEndpoint" value="http://localhost:3000/api" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <button type="submit">Get Answer</button>
+        </form>
+        
+        <div id="loading" class="loading">Processing your request, please wait...</div>
+        
+        <div id="response" class="response" style="display: none;"></div>
+    </div>
+    
+    <script>
+        document.getElementById('questionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const questionText = document.getElementById('question').value;
+            const fileInput = document.getElementById('file');
+            const apiEndpoint = document.getElementById('apiEndpoint').value;
+            const loadingDiv = document.getElementById('loading');
+            const responseDiv = document.getElementById('response');
+            
+            // Reset and show loading
+            responseDiv.style.display = 'none';
+            responseDiv.classList.remove('error');
+            loadingDiv.style.display = 'block';
+            
+            try {
+                const formData = new FormData();
+                formData.append('question', questionText);
+                
+                if (fileInput.files.length > 0) {
+                    formData.append('file', fileInput.files[0]);
+                }
+                
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                // Display result
+                loadingDiv.style.display = 'none';
+                responseDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    responseDiv.innerHTML = `<h3>Answer:</h3><p>${result.answer}</p>`;
+                } else {
+                    responseDiv.classList.add('error');
+                    responseDiv.innerHTML = `<h3>Error:</h3><p>${result.error || 'Unknown error occurred'}</p>`;
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                responseDiv.style.display = 'block';
+                responseDiv.classList.add('error');
+                responseDiv.innerHTML = `<h3>Error:</h3><p>Failed to connect to the API. Make sure the server is running and the endpoint is correct.</p>`;
+            }
+        });
+    </script>
+</body>
+</html> 
